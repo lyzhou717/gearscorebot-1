@@ -16,6 +16,7 @@ $formula: returns method to which substats are converted to gs values
 $hs: returns base stats of specified hero
 $gs: prompts the bot to ask for your stats, to which you reply in the format: <x> <y> <x> <y> <x> <y> <x> <y>, where x is the abbreviated name of the substat(i.e. atk, hp, def, spd, cc, cd, eff, er) with a space between each word/value
 $herogs: allows user to calculate gs of gear with flat stats. command prompts bot to ask for stats followed by the name of the unit. stat input follows the format of the $gs command, with flat stats taking the name of fatk, fhp, fdef for atk, hp and def respectively.
+$search: prompts the bot to give build references for given unit
 '''
 
 

@@ -1,17 +1,18 @@
 import discord
-import httplib2
-import json
-import mimetypes
 import os
 import re
 import herodb
-import urllib
+import validators
+import random
+import sqlite3
 from herodb import stats, units
 from guide import helpcontent, formula, commandlist
-from img import uploadItem
 from stayingalive import stayingalive
 
 client = discord.Client()
+
+conn = sqlite3.connect("examples.db")
+db = conn.cursor()
 
 validsubstats = ['atk', 'fatk', 'hp', 'fhp', 'def', 'fdef', 'spd', 'cc', 'cd', 'cdam', 'eff', 'er', 'res']
 
@@ -42,6 +43,56 @@ async def on_message(msg):
 
     msg = await client.wait_for('message', check=check)
     await msg.channel.send(stats[msg.content.lower()])
+
+  if msg.content.startswith('$submit'):
+    await msg.channel.send('pls input img link, followed by unit name')
+
+    def check(x):
+      return x.channel == msg.channel
+
+    msg = await client.wait_for('message', check=check)
+
+    link = msg.content.split()[0]
+    name = msg.content.split(link, 1)[1].lstrip()
+
+    if validators.url(link):
+      check_exist = db.execute("SELECT * FROM images WHERE link = ?", (link,))
+      if len(check_exist.fetchall()) != 0:
+        await msg.channel.send('link already exists in database')
+      else:
+        db.execute("INSERT INTO images (name, link) VALUES(?, ?)", (name.lower(), link)) 
+        conn.commit()
+        await msg.channel.send('unit recorded')
+    else:
+      await msg.channel.send('invalid name/link')
+  
+  if msg.content.startswith('$search'):
+    await msg.channel.send('pls input unit name')
+
+    def check(x):
+      return x.channel == msg.channel
+
+    msg = await client.wait_for('message', check=check)
+    
+    name = msg.content.lower()
+
+    db.execute("SELECT name, link FROM images WHERE name = ?", (name,))
+    results = db.fetchall()
+    
+    img = random.choice(results)[1]
+    await msg.channel.send(img)
+
+  if msg.content.startswith('$delete'):
+    await msg.channel.send('pls input link to delete')
+
+    def check(x):
+      return validators.url(x.content) and x.channel == msg.channel
+
+    msg = await client.wait_for('message', check=check)
+    db.execute("DELETE FROM images WHERE link = ?", (msg.content,))
+    conn.commit()
+    await msg.channel.send('link removed')
+
 
   if msg.content.startswith('$herogs'):
     await msg.channel.send('pls input gear stats followed by the unit name')
